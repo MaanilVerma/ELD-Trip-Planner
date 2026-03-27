@@ -7,19 +7,11 @@ Step-by-step instructions to deploy the ELD Trip Planner. Frontend on **Vercel**
 ## Overview
 
 ```
-                    ┌──────────────┐
-  Browser  ──────>  │   Vercel     │  (React frontend)
-                    │   (static)   │
-                    └──────┬───────┘
-                           │ /api/*
-                           v
-                    ┌──────────────┐
-                    │   Render     │  (Django backend)
-                    │   (gunicorn) │
-                    └──────────────┘
+  Browser ──> Vercel (React static)
+         └──> Render (Django API)    ← same browser; `VITE_API_URL` points here
 ```
 
-- **Frontend**: Vercel serves the built React app as static files. API calls go to the Render backend.
+- **Frontend**: Vercel serves the built React app. The build **must** include `VITE_API_URL` so the browser calls your Render backend directly (CORS on Django allows your Vercel origin).
 - **Backend**: Render runs Django with Gunicorn. No database needed (all computation, no persistence).
 
 ---
@@ -117,15 +109,15 @@ Visit `https://eld-trip-planner-api.onrender.com/api/locations/search?q=Dallas` 
 | **Build Command** | `npm run build` (auto-detected) |
 | **Output Directory** | `dist` (auto-detected) |
 
-### 3b. Set Environment Variable
+### 3b. Environment variable (required)
 
-Add one environment variable:
+Add this under **Environment Variables** for the Vercel project (Production — and Preview if you use it):
 
 | Key | Value |
 |-----|-------|
-| `VITE_API_URL` | `https://eld-trip-planner-api.onrender.com` (your Render backend URL from Step 2c) |
+| `VITE_API_URL` | Your Render backend origin from Step 2c (e.g. `https://eld-trip-planner-api.onrender.com`), **no trailing slash** |
 
-> **Important**: Vite environment variables must start with `VITE_` to be bundled into the frontend build. The `tripApi.ts` already reads `import.meta.env.VITE_API_URL`.
+Vite inlines this at **build** time. If it is missing, `npm run build` fails on purpose so you never deploy a frontend that calls `/api` on Vercel (which would return HTML instead of JSON).
 
 ### 3c. Deploy
 
@@ -135,7 +127,9 @@ Your frontend URL will look like: `https://your-app-name.vercel.app`
 
 ### 3d. Update Backend CORS
 
-Now go back to **Render** > your service > **Environment** and update:
+The browser calls Render from your Vercel page origin, so Django must allow that origin.
+
+Go to **Render** > your service > **Environment** and set:
 
 ```
 CORS_ALLOWED_ORIGINS=https://your-app-name.vercel.app
