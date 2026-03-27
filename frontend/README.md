@@ -86,9 +86,10 @@ Shipping info (shipper name, commodity, document number) stays client-side only 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | *(empty — uses Vite proxy in dev)* |
+| `VITE_API_URL` | Backend API origin (no trailing slash) | *empty in dev — Vite proxies `/api`* |
 
-For local development, no env var is needed — Vite proxies `/api/*` to `http://127.0.0.1:8000`. For production, set `VITE_API_URL` to your backend URL.
+- **Development**: Omit `VITE_API_URL`; `vite.config.ts` proxies `/api/*` to `http://127.0.0.1:8000` (override with `VITE_PROXY_TARGET` if needed).
+- **Production** (`npm run build`, Vercel): **`VITE_API_URL` is required** — the build fails without it so API traffic always goes to your real backend, not the static host.
 
 ## API Proxy
 
