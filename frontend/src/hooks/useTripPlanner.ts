@@ -64,7 +64,7 @@ export function useTripPlanner(): TripPlannerState & TripPlannerActions {
         err?.message ||
         "Failed to plan trip. Please check your inputs and try again.";
       setError(message);
-      toast.error("Route planning failed");
+      toast.error("Route planning failed. We don't have a route for that location. Please try with Amarillo, TX");
     } finally {
       setIsLoading(false);
     }

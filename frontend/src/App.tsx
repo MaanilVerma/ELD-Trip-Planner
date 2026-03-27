@@ -132,7 +132,8 @@ export default function App() {
                       Route Planning Failed
                     </p>
                     <p className="text-[12px] text-destructive/80 mt-0.5">
-                      {error}
+                      We don't have a route for that location. Please try with
+                      Amarillo, TX
                     </p>
                     <button
                       onClick={() => setError(null)}
