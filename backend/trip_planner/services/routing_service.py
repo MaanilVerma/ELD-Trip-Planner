@@ -2,10 +2,26 @@ import math
 import os
 import requests
 
-ORS_BASE = 'https://api.openrouteservice.org/v2/directions/driving-car'
+# GeoJSON response shape (features[].geometry) — see ORS Directions POST docs.
+ORS_DIRECTIONS_GEOJSON_URL = (
+    'https://api.openrouteservice.org/v2/directions/driving-car/geojson'
+)
 ORS_API_KEY = os.environ.get('ORS_API_KEY', '')
 
 METERS_TO_MILES = 0.000621371
+
+
+def _geojson_line_positions(geometry):
+    """Flatten LineString or MultiLineString coordinates to [[lng, lat], ...]."""
+    if not geometry:
+        return []
+    gtype = geometry.get('type')
+    coords = geometry.get('coordinates') or []
+    if gtype == 'LineString':
+        return coords
+    if gtype == 'MultiLineString':
+        return [pt for ring in coords for pt in ring]
+    raise ValueError(f'Unsupported route geometry type: {gtype}')
 
 
 def get_route(origin, destination):
@@ -44,14 +60,29 @@ def _get_route_haversine(origin, destination):
 
 
 def _get_route_ors(origin, destination):
-    """Route via OpenRouteService (free, 2000 req/day)."""
-    resp = requests.get(ORS_BASE, params={
-        'start': f'{origin[1]},{origin[0]}',
-        'end': f'{destination[1]},{destination[0]}',
-    }, headers={
-        'Authorization': ORS_API_KEY,
-    }, timeout=30)
-    resp.raise_for_status()
+    """Route via OpenRouteService (free tier). POST JSON per Directions API v2."""
+    payload = {
+        'coordinates': [
+            [origin[1], origin[0]],
+            [destination[1], destination[0]],
+        ],
+        # ORS default snap radius is tight; Nominatim points often need wider search or -1 (no limit).
+        'radiuses': [-1, -1],
+    }
+    resp = requests.post(
+        ORS_DIRECTIONS_GEOJSON_URL,
+        json=payload,
+        headers={
+            'Authorization': ORS_API_KEY,
+            'Content-Type': 'application/json',
+        },
+        timeout=30,
+    )
+    if not resp.ok:
+        # 404/400 = common "could not find point" / no route; 5xx/429 = transient; still degrade gracefully.
+        if resp.status_code in (401, 403):
+            resp.raise_for_status()
+        return _get_route_haversine(origin, destination)
     data = resp.json()
 
     if not data.get('features'):
@@ -60,10 +91,10 @@ def _get_route_ors(origin, destination):
     feature = data['features'][0]
     summary = feature['properties']['summary']
 
-    # GeoJSON coordinates are [lng, lat], convert to [lat, lng]
+    # GeoJSON positions are [lng, lat], convert to [lat, lng]
     coords = [
         [coord[1], coord[0]]
-        for coord in feature['geometry']['coordinates']
+        for coord in _geojson_line_positions(feature['geometry'])
     ]
 
     return {
