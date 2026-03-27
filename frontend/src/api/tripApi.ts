@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { TripFormData, TripPlanResponse, Location } from '../types/trip';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const rawBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? '';
+const API_BASE = rawBase.replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: API_BASE,
