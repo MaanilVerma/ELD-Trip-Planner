@@ -78,7 +78,7 @@ export default function TripForm({
               type="button"
               onClick={onToggleCollapse}
               className="press-effect h-8 px-3 bg-surface-secondary text-text-secondary text-[12px] font-medium
-                         sm hover:bg-surface hover:text-text shadow-ring
+                         rounded-sm hover:bg-surface hover:text-text shadow-ring
                          flex items-center gap-1.5 cursor-pointer"
             >
               <svg
@@ -105,7 +105,7 @@ export default function TripForm({
                 onReset?.();
               }}
               className="press-effect h-8 px-3 bg-surface-secondary text-muted text-[12px] font-medium
-                         sm hover:bg-destructive-light hover:text-destructive shadow-ring
+                         rounded-sm hover:bg-destructive-light hover:text-destructive shadow-ring
                          flex items-center gap-1.5 cursor-pointer"
             >
               <svg
@@ -204,7 +204,7 @@ export default function TripForm({
 
       <LocationField
         label="Dropoff Location"
-        placeholder="e.g. Los Angeles, CA"
+        placeholder="e.g. Amarillo, TX"
         value={form.dropoffLocation}
         onChange={(v) => setForm({ ...form, dropoffLocation: v })}
         onBlur={() => markTouched("dropoffLocation")}
@@ -256,7 +256,7 @@ export default function TripForm({
           onChange={(e) =>
             setForm({ ...form, currentCycleUsed: parseFloat(e.target.value) })
           }
-          className="w-full h-1.5 bg-border rounded-full appearance-none cursor-pointer
+          className="w-full h-1.5 bg-border rounded-full appearance-none cursor-grabbing
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
                      [&::-webkit-slider-thumb]:bg-secondary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md
                      [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
@@ -284,8 +284,12 @@ export default function TripForm({
             {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((displayHour) => {
               const isPM = form.startHour >= 12;
               const hour24 = isPM
-                ? (displayHour === 12 ? 12 : displayHour + 12)
-                : (displayHour === 12 ? 0 : displayHour);
+                ? displayHour === 12
+                  ? 12
+                  : displayHour + 12
+                : displayHour === 12
+                  ? 0
+                  : displayHour;
               const isSelected = form.startHour === hour24;
               return (
                 <button
@@ -293,9 +297,10 @@ export default function TripForm({
                   type="button"
                   onClick={() => setForm({ ...form, startHour: hour24 })}
                   className={`h-7 rounded-sm text-[11px] font-medium transition-all duration-150 cursor-pointer
-                    ${isSelected
-                      ? 'bg-secondary text-white shadow-sm'
-                      : 'bg-surface-secondary text-text-secondary hover:bg-surface hover:text-text shadow-xs'
+                    ${
+                      isSelected
+                        ? "bg-secondary text-white shadow-sm"
+                        : "bg-surface-secondary text-text-secondary hover:bg-surface hover:text-text shadow-xs"
                     }`}
                 >
                   {displayHour}
@@ -308,13 +313,15 @@ export default function TripForm({
             <button
               type="button"
               onClick={() => {
-                const h = form.startHour >= 12 ? form.startHour - 12 : form.startHour;
+                const h =
+                  form.startHour >= 12 ? form.startHour - 12 : form.startHour;
                 setForm({ ...form, startHour: h });
               }}
               className={`h-7 w-10 rounded-sm text-[11px] font-semibold transition-all duration-150 cursor-pointer
-                ${form.startHour < 12
-                  ? 'bg-secondary text-white shadow-sm'
-                  : 'bg-surface-secondary text-muted hover:text-text shadow-xs'
+                ${
+                  form.startHour < 12
+                    ? "bg-secondary text-white shadow-sm"
+                    : "bg-surface-secondary text-muted hover:text-text shadow-xs"
                 }`}
             >
               AM
@@ -322,13 +329,15 @@ export default function TripForm({
             <button
               type="button"
               onClick={() => {
-                const h = form.startHour < 12 ? form.startHour + 12 : form.startHour;
+                const h =
+                  form.startHour < 12 ? form.startHour + 12 : form.startHour;
                 setForm({ ...form, startHour: h });
               }}
               className={`h-7 w-10 rounded-sm text-[11px] font-semibold transition-all duration-150 cursor-pointer
-                ${form.startHour >= 12
-                  ? 'bg-secondary text-white shadow-sm'
-                  : 'bg-surface-secondary text-muted hover:text-text shadow-xs'
+                ${
+                  form.startHour >= 12
+                    ? "bg-secondary text-white shadow-sm"
+                    : "bg-surface-secondary text-muted hover:text-text shadow-xs"
                 }`}
             >
               PM
@@ -336,7 +345,14 @@ export default function TripForm({
           </div>
         </div>
         <p className="text-[11px] text-muted/60 mt-1.5">
-          Selected: {form.startHour === 0 ? '12:00 AM' : form.startHour < 12 ? `${form.startHour}:00 AM` : form.startHour === 12 ? '12:00 PM' : `${form.startHour - 12}:00 PM`}
+          Selected:{" "}
+          {form.startHour === 0
+            ? "12:00 AM"
+            : form.startHour < 12
+              ? `${form.startHour}:00 AM`
+              : form.startHour === 12
+                ? "12:00 PM"
+                : `${form.startHour - 12}:00 PM`}
         </p>
       </div>
 
@@ -493,22 +509,32 @@ function LocationField({
   const [suggestions, setSuggestions] = useState<Location[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const fetchGenerationRef = useRef(0);
   const listboxId = useRef(
     `listbox-${label.replace(/\s+/g, "-").toLowerCase()}`,
   ).current;
 
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 3) {
+      fetchGenerationRef.current += 1;
       setSuggestions([]);
+      setIsSearching(false);
       return;
     }
+    const gen = ++fetchGenerationRef.current;
+    setIsSearching(true);
     try {
       const results = await searchLocations(query);
+      if (gen !== fetchGenerationRef.current) return;
       setSuggestions(results);
     } catch {
+      if (gen !== fetchGenerationRef.current) return;
       setSuggestions([]);
+    } finally {
+      if (gen === fetchGenerationRef.current) setIsSearching(false);
     }
   }, []);
 
@@ -521,6 +547,8 @@ function LocationField({
   };
 
   const handleSelect = (loc: Location) => {
+    fetchGenerationRef.current += 1;
+    setIsSearching(false);
     onChange(loc.display_name || `${loc.lat}, ${loc.lng}`);
     setSuggestions([]);
     setShowSuggestions(false);
@@ -585,6 +613,7 @@ function LocationField({
           type="text"
           role="combobox"
           aria-expanded={isOpen}
+          aria-busy={isSearching}
           aria-controls={listboxId}
           aria-labelledby={`${listboxId}-label`}
           aria-activedescendant={
@@ -600,11 +629,39 @@ function LocationField({
           title={value}
           aria-invalid={!!error}
           aria-describedby={error ? `${listboxId}-error` : undefined}
-          className={`w-full h-10 pl-9 pr-3 bg-surface border border-border rounded-sm text-[13px] shadow-xs
+          className={`w-full h-10 pl-9 bg-surface border border-border rounded-sm text-[13px] shadow-xs
                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:border-secondary
                      transition-shadow duration-150 placeholder:text-muted/50
+                     ${isSearching ? "pr-9" : "pr-3"}
                      ${error ? "border-destructive/50" : "border-border"}`}
         />
+        {isSearching && (
+          <span
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary/80 pointer-events-none"
+            aria-hidden="true"
+          >
+            <svg
+              className="w-4 h-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-90"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </span>
+        )}
       </div>
       <AnimatePresence>
         {error && (
