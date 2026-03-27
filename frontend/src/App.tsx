@@ -229,20 +229,6 @@ export default function App() {
                         ELD logs
                       </span>
                     </div>
-                    {/* Demo route hint */}
-                    <div className="mt-5 rounded-sm bg-surface-secondary border border-border px-4 py-3 text-left">
-                      <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
-                        Supported demo routes
-                      </p>
-                      <p className="text-[12px] text-text-secondary leading-relaxed">
-                        Chicago · Indianapolis · Dallas · Oklahoma City ·
-                        Amarillo · Miami
-                      </p>
-                      <p className="text-[11px] text-muted/70 mt-1">
-                        West Coast (California, LA) not supported on the free
-                        routing API.
-                      </p>
-                    </div>
                   </div>
                 </motion.div>
               )}
