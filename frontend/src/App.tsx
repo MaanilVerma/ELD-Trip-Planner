@@ -132,8 +132,10 @@ export default function App() {
                       Route Planning Failed
                     </p>
                     <p className="text-[12px] text-destructive/80 mt-0.5">
-                      We don't have a route for that location. Please try with
-                      Amarillo, TX
+                      Supported demo routes: Chicago, Indianapolis, Dallas,
+                      Oklahoma City, Amarillo, and Miami. West Coast
+                      (California, LA) etc. are not supported on the free
+                      routing API.
                     </p>
                     <button
                       onClick={() => setError(null)}
@@ -226,6 +228,20 @@ export default function App() {
                         <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
                         ELD logs
                       </span>
+                    </div>
+                    {/* Demo route hint */}
+                    <div className="mt-5 rounded-sm bg-surface-secondary border border-border px-4 py-3 text-left">
+                      <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+                        Supported demo routes
+                      </p>
+                      <p className="text-[12px] text-text-secondary leading-relaxed">
+                        Chicago · Indianapolis · Dallas · Oklahoma City ·
+                        Amarillo · Miami
+                      </p>
+                      <p className="text-[11px] text-muted/70 mt-1">
+                        West Coast (California, LA) not supported on the free
+                        routing API.
+                      </p>
                     </div>
                   </div>
                 </motion.div>
