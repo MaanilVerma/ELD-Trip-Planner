@@ -2,7 +2,7 @@ import { useEffect, memo } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { RouteData, Stop } from '../types/trip';
+import type { RouteData, Stop } from '../../types/trip';
 
 // Fix default marker icon issue with webpack/vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;

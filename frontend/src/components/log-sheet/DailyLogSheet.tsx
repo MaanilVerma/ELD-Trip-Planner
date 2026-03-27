@@ -9,7 +9,7 @@ import LogHeader from "./LogHeader";
 import LogRemarks from "./LogRemarks";
 import LogTotals from "./LogTotals";
 import LogRecap from "./LogRecap";
-import type { DailyLog, ShippingInfo } from "../types/trip";
+import type { DailyLog, ShippingInfo } from "../../types/trip";
 
 interface Props {
   logDay: DailyLog;

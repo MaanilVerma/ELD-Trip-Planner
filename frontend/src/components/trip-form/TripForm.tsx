@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import type { TripFormData, Location } from "../types/trip";
-import { searchLocations } from "../api/tripApi";
+import type { TripFormData, Location } from "../../types/trip";
+import { searchLocations } from "../../api/tripApi";
 
 interface Props {
   onSubmit: (data: TripFormData) => void;

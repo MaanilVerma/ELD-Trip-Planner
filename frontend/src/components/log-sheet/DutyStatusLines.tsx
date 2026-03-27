@@ -5,7 +5,7 @@
 
 import type { ReactElement } from 'react';
 import { GRID } from './LogGrid';
-import type { LogSegment } from '../types/trip';
+import type { LogSegment } from '../../types/trip';
 
 interface Props {
   segments: LogSegment[];

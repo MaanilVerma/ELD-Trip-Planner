@@ -1,88 +1,27 @@
-import { useState, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Toaster, toast } from "sonner";
-import TripForm from "./components/TripForm";
-const RouteMap = lazy(() => import("./components/RouteMap"));
-import TripSummary from "./components/TripSummary";
-import LogSheetViewer from "./components/LogSheetViewer";
-import { planTrip } from "./api/tripApi";
-import type {
-  TripFormData,
-  TripPlanResponse,
-  ShippingInfo,
-} from "./types/trip";
-
-type Tab = "map" | "logs";
-
-// Shared transition presets (Emil: fast, Jakub: spring with no bounce)
-const fadeUp = {
-  initial: { opacity: 0, y: 6, filter: "blur(4px)" },
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -4, filter: "blur(3px)" },
-  transition: { type: "spring" as const, duration: 0.3, bounce: 0 },
-};
-
-const fadeDown = {
-  initial: { opacity: 0, y: -8, filter: "blur(3px)" },
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -6, filter: "blur(2px)" },
-  transition: { type: "spring" as const, duration: 0.25, bounce: 0 },
-};
-
-const fadeScale = {
-  initial: { opacity: 0, scale: 0.97, filter: "blur(4px)" },
-  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, scale: 0.98, filter: "blur(2px)" },
-  transition: { type: "spring" as const, duration: 0.3, bounce: 0 },
-};
+import { Toaster } from "sonner";
+import TripForm from "./components/trip-form/TripForm";
+const RouteMap = lazy(() => import("./components/map/RouteMap"));
+import TripSummary from "./components/trip-summary/TripSummary";
+import LogSheetViewer from "./components/log-sheet/LogSheetViewer";
+import { useTripPlanner } from "./hooks/useTripPlanner";
+import { fadeUp, fadeDown, fadeScale } from "./constants/animations";
 
 export default function App() {
-  const [tripPlan, setTripPlan] = useState<TripPlanResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("map");
-  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
-    shipperName: "",
-    commodity: "",
-    documentNumber: "",
-  });
-  const [isFormCollapsed, setIsFormCollapsed] = useState(false);
-
-  const handleReset = () => {
-    setTripPlan(null);
-    setError(null);
-    setIsFormCollapsed(false);
-    setActiveTab("map");
-  };
-
-  const handleSubmit = async (data: TripFormData) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await planTrip(data);
-      setTripPlan(result);
-      setShippingInfo({
-        shipperName: data.shipperName,
-        commodity: data.commodity,
-        documentNumber: data.documentNumber,
-      });
-      setActiveTab("map");
-      setIsFormCollapsed(true);
-      toast.success("Route planned successfully", {
-        description: `${result.stops.length} stops across ${result.daily_logs.length} days`,
-      });
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.detail ||
-        err?.message ||
-        "Failed to plan trip. Please check your inputs and try again.";
-      setError(message);
-      toast.error("Route planning failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    tripPlan,
+    isLoading,
+    error,
+    activeTab,
+    shippingInfo,
+    isFormCollapsed,
+    setActiveTab,
+    setError,
+    setIsFormCollapsed,
+    handleSubmit,
+    handleReset,
+  } = useTripPlanner();
 
   return (
     <div className="min-h-dvh bg-background">

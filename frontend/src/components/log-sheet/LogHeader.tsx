@@ -3,7 +3,7 @@
  * Matches the official DOT form layout with all required fields.
  */
 
-import type { ShippingInfo } from '../types/trip';
+import type { ShippingInfo } from '../../types/trip';
 
 interface Props {
   date: string;

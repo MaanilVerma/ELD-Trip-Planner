@@ -3,7 +3,7 @@
  * Appears at the bottom of each daily log sheet.
  */
 
-import type { RecapData } from "../types/trip";
+import type { RecapData } from "../../types/trip";
 
 interface Props {
   recap: RecapData;

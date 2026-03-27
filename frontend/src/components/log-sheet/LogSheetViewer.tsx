@@ -7,8 +7,8 @@ import { useState, useRef, useCallback } from "react";
 import { AnimatePresence } from "motion/react";
 import DailyLogSheet from "./DailyLogSheet";
 import LogSheetLightbox from "./LogSheetLightbox";
-import { exportLogsToPdf } from "../utils/exportPdf";
-import type { DailyLog, ShippingInfo } from "../types/trip";
+import { exportLogsToPdf } from "../../utils/exportPdf";
+import type { DailyLog, ShippingInfo } from "../../types/trip";
 
 interface Props {
   dailyLogs: DailyLog[];

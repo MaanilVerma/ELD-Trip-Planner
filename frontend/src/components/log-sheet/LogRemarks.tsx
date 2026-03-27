@@ -3,7 +3,7 @@
  * Split layout: left for duty status remarks, right for shipping info.
  */
 
-import type { Remark, ShippingInfo } from "../types/trip";
+import type { Remark, ShippingInfo } from "../../types/trip";
 
 interface Props {
   remarks: Remark[];

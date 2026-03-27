@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "motion/react";
-import type { Stop, RouteData } from "../types/trip";
+import type { Stop, RouteData } from "../../types/trip";
 
 interface Props {
   route: RouteData;

@@ -7,7 +7,7 @@ import { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import DailyLogSheet from "./DailyLogSheet";
-import type { DailyLog, ShippingInfo } from "../types/trip";
+import type { DailyLog, ShippingInfo } from "../../types/trip";
 
 interface Props {
   dailyLogs: DailyLog[];

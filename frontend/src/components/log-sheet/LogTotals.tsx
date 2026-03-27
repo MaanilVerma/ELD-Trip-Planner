@@ -3,7 +3,7 @@
  */
 
 import { GRID } from "./LogGrid";
-import type { StatusTotals } from "../types/trip";
+import type { StatusTotals } from "../../types/trip";
 
 interface Props {
   totals: StatusTotals;
