@@ -17,7 +17,6 @@ export default function App() {
     shippingInfo,
     isFormCollapsed,
     setActiveTab,
-    setError,
     setIsFormCollapsed,
     handleSubmit,
     handleReset,
@@ -126,23 +125,6 @@ export default function App() {
                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
                       />
                     </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-destructive leading-tight">
-                      Route Planning Failed
-                    </p>
-                    <p className="text-[12px] text-destructive/80 mt-0.5">
-                      Supported demo routes: Chicago, Indianapolis, Dallas,
-                      Oklahoma City, Amarillo, and Miami. West Coast
-                      (California, LA) etc. are not supported on the free
-                      routing API.
-                    </p>
-                    <button
-                      onClick={() => setError(null)}
-                      className="mt-2 text-[12px] font-medium text-destructive hover:text-destructive/80 underline underline-offset-2 cursor-pointer transition-colors"
-                    >
-                      Dismiss
-                    </button>
                   </div>
                 </motion.div>
               )}
