@@ -54,7 +54,11 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        # On Vercel serverless, collectstatic is not run, so WhiteNoise's
+        # manifest-based storage would fail.  Vercel sets VERCEL=1 automatically.
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+        if os.environ.get('VERCEL')
+        else 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
 
