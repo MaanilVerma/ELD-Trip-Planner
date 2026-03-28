@@ -170,12 +170,12 @@ Returns location autocomplete suggestions.
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for a complete step-by-step guide.
 
-**TL;DR**: Frontend on **Vercel** (free), Backend on **Render** (free).
+**TL;DR**: Both frontend and backend deploy to a single **Vercel** project (free).
 
-| Service | Platform | Key Env Vars |
-|---------|----------|-------------|
-| Frontend | Vercel | `VITE_API_URL` (backend URL) |
-| Backend | Render | `DJANGO_SECRET_KEY`, `DEBUG=False`, `ORS_API_KEY`, `CORS_ALLOWED_ORIGINS` |
+| Component | Runtime | Entry Point |
+|-----------|---------|-------------|
+| Frontend | `@vercel/static-build` | `frontend/package.json` |
+| Backend | `@vercel/python` (serverless) | `api/index.py` |
 
 ---
 
@@ -183,6 +183,11 @@ See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for a complete step-by-step gui
 
 ```
 auto-project/
+├── api/
+│   └── index.py                    # Vercel serverless entry point (Django WSGI)
+├── vercel.json                     # Unified Vercel deployment config
+├── requirements.txt                # Python deps for Vercel builder
+│
 ├── backend/
 │   ├── config/                     # Django project settings
 │   │   ├── settings.py
@@ -198,7 +203,7 @@ auto-project/
 │   │       ├── hos_engine.py           # HOS compliance engine (core)
 │   │       └── log_sheet_service.py    # Daily log generation + recap
 │   ├── manage.py
-│   └── requirements.txt
+│   └── requirements.txt            # Python deps (includes gunicorn for local dev)
 │
 ├── frontend/
 │   ├── src/
@@ -220,8 +225,7 @@ auto-project/
 │   │       ├── LogTotals.tsx       # Hours summary
 │   │       └── LogRecap.tsx        # 70hr/8day cycle recap
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── vercel.json
+│   └── vite.config.ts
 │
 ├── docs/
 │   ├── CLEANUP-TRACKER.md          # Audit & gap tracker

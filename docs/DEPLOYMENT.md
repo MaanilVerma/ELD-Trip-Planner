@@ -1,18 +1,20 @@
 # Deployment Guide
 
-Step-by-step instructions to deploy the ELD Trip Planner. Frontend on **Vercel** (free), backend on **Render** (free).
+Step-by-step instructions to deploy the ELD Trip Planner. Both frontend and backend deploy to a single **Vercel** project (free).
 
 ---
 
 ## Overview
 
 ```
-  Browser ──> Vercel (React static)
-         └──> Render (Django API)    ← same browser; `VITE_API_URL` points here
+  Browser ──> Vercel
+               ├── /api/*   → Django serverless function  (@vercel/python)
+               └── /*       → React static files          (@vercel/static-build)
 ```
 
-- **Frontend**: Vercel serves the built React app. The build **must** include `VITE_API_URL` so the browser calls your Render backend directly (CORS on Django allows your Vercel origin).
-- **Backend**: Render runs Django with Gunicorn. No database needed (all computation, no persistence).
+- **Frontend**: Vercel builds the React app and serves it from its CDN.
+- **Backend**: Django runs as a serverless function via `api/index.py`. Same origin as the frontend — no CORS needed.
+- **No database** — all computation is stateless.
 
 ---
 
@@ -20,7 +22,6 @@ Step-by-step instructions to deploy the ELD Trip Planner. Frontend on **Vercel**
 
 - A **GitHub** account with this repo pushed
 - A **Vercel** account (sign up at vercel.com — free with GitHub)
-- A **Render** account (sign up at render.com — free with GitHub)
 - Your **ORS API key** (from openrouteservice.org)
 
 ---
@@ -48,54 +49,9 @@ Make sure `.env` is NOT committed (it's in `.gitignore`).
 
 ---
 
-## Step 2: Deploy Backend on Render
+## Step 2: Deploy on Vercel
 
-### 2a. Create a Web Service
-
-1. Go to [render.com/dashboard](https://dashboard.render.com)
-2. Click **"New +"** > **"Web Service"**
-3. Connect your GitHub repo
-4. Configure:
-
-| Setting | Value |
-|---------|-------|
-| **Name** | `eld-trip-planner-api` |
-| **Region** | Pick closest to your users |
-| **Root Directory** | `backend` |
-| **Runtime** | `Python 3` |
-| **Build Command** | `pip install -r requirements.txt && python manage.py collectstatic --noinput` |
-| **Start Command** | `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT` |
-| **Instance Type** | Free |
-
-### 2b. Set Environment Variables
-
-In the Render dashboard, go to your service > **Environment** tab. Add these:
-
-| Key | Value |
-|-----|-------|
-| `DJANGO_SECRET_KEY` | Generate one: run `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
-| `DEBUG` | `False` |
-| `ORS_API_KEY` | Your OpenRouteService API key |
-| `CORS_ALLOWED_ORIGINS` | `https://your-app-name.vercel.app` (fill in after Step 3) |
-| `PYTHON_VERSION` | `3.11.6` |
-
-### 2c. Deploy
-
-Click **"Create Web Service"**. Render will build and deploy. Wait for it to show "Live".
-
-Note your backend URL — it will look like: `https://eld-trip-planner-api.onrender.com`
-
-### 2d. Test the Backend
-
-Visit `https://eld-trip-planner-api.onrender.com/api/locations/search?q=Dallas` in your browser. You should see a JSON array of location suggestions.
-
-> **Note**: Render free tier spins down after 15 minutes of inactivity. First request after sleep takes ~30-60 seconds to cold-start. This is normal for the free tier.
-
----
-
-## Step 3: Deploy Frontend on Vercel
-
-### 3a. Import Project
+### 2a. Import Project
 
 1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
 2. Click **"Add New..."** > **"Project"**
@@ -104,104 +60,106 @@ Visit `https://eld-trip-planner-api.onrender.com/api/locations/search?q=Dallas` 
 
 | Setting | Value |
 |---------|-------|
-| **Framework Preset** | Vite |
-| **Root Directory** | `frontend` |
-| **Build Command** | `npm run build` (auto-detected) |
-| **Output Directory** | `dist` (auto-detected) |
+| **Root Directory** | `.` (project root — NOT `frontend/`) |
+| **Framework Preset** | Other |
 
-### 3b. Environment variable (required)
+Leave Build Command and Output Directory blank — `vercel.json` handles everything.
 
-Add this under **Environment Variables** for the Vercel project (Production — and Preview if you use it):
+### 2b. Set Environment Variables
 
-| Key | Value |
-|-----|-------|
-| `VITE_API_URL` | Your Render backend origin from Step 2c (e.g. `https://eld-trip-planner-api.onrender.com`), **no trailing slash** |
+Add these under **Environment Variables** (Production + Preview):
 
-Vite inlines this at **build** time. If it is missing, `npm run build` fails on purpose so you never deploy a frontend that calls `/api` on Vercel (which would return HTML instead of JSON).
+| Key | Value | Notes |
+|-----|-------|-------|
+| `DJANGO_SECRET_KEY` | `<random>` | Generate: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+| `DEBUG` | `False` | Must be false in production |
+| `ORS_API_KEY` | Your OpenRouteService API key | Required for accurate routing |
+| `VITE_API_URL` | *(leave empty)* | Empty = same-origin requests (correct for unified deployment) |
 
-### 3c. Deploy
+**Not needed**: `CORS_ALLOWED_ORIGINS` (same-origin, no CORS), `VERCEL` (set automatically by Vercel).
 
-Click **"Deploy"**. Vercel will build and deploy in ~1 minute.
+### 2c. Deploy
 
-Your frontend URL will look like: `https://your-app-name.vercel.app`
+Click **"Deploy"**. Vercel will:
+1. Build the React frontend (`npm run build` in `frontend/`)
+2. Bundle the Django serverless function (`api/index.py` + `requirements.txt`)
 
-### 3d. Update Backend CORS
-
-The browser calls Render from your Vercel page origin, so Django must allow that origin.
-
-Go to **Render** > your service > **Environment** and set:
-
-```
-CORS_ALLOWED_ORIGINS=https://your-app-name.vercel.app
-```
-
-Render will auto-redeploy with the new CORS setting.
-
----
-
-## Step 4: Verify End-to-End
+### 2d. Verify
 
 1. Open your Vercel URL in the browser
 2. Enter a trip (e.g., Dallas, TX → Oklahoma City, OK → Amarillo, TX)
 3. Click **Plan Trip**
 4. Verify:
-   - Route map loads with markers
-   - ELD logs generate with correct data
+   - Route map loads with markers and colored legs
+   - ELD logs generate with correct duty status segments
    - PDF export works
 
-> If the first request is slow (~30 sec), that's the Render free-tier cold start. Subsequent requests will be fast.
+Open browser DevTools → Network tab and confirm API calls go to the same origin (no cross-origin requests).
 
 ---
 
 ## Troubleshooting
 
-### "Network Error" or CORS error in browser console
-- Check that `CORS_ALLOWED_ORIGINS` on Render exactly matches your Vercel URL (no trailing slash)
-- Check that `VITE_API_URL` on Vercel exactly matches your Render URL (no trailing slash)
+### Build fails: "No Output Directory"
+- Make sure **Root Directory** is set to `.` (project root), not `frontend/`
+- Make sure **Framework Preset** is set to "Other"
 
-### Backend returns 500 error
-- Check Render logs (Dashboard > your service > Logs)
-- Make sure `ORS_API_KEY` is set
-- Make sure `DJANGO_SECRET_KEY` is set
+### API returns 500 error
+- Check Vercel Function Logs (Dashboard > your project > Functions tab)
+- Make sure `ORS_API_KEY` and `DJANGO_SECRET_KEY` are set in environment variables
+- Make sure `DEBUG` is set to `False`
 
 ### Frontend loads but API calls fail
 - Open browser DevTools > Network tab
-- Check that requests go to your Render URL, not `localhost`
-- If still going to localhost, make sure `VITE_API_URL` is set and you **redeployed** after setting it
+- Requests should go to `/api/...` on the same domain
+- If `VITE_API_URL` is set to a non-empty value, requests go cross-origin — clear it and redeploy
 
 ### Routing timeout
-- Without `ORS_API_KEY`, the backend uses haversine estimates (faster but less accurate)
-- With the key, OpenRouteService should respond within 5 seconds
+- Vercel free tier has a 10-second function timeout
+- Most trip plans complete in 2-5 seconds
+- If external APIs (Nominatim, ORS) are slow, the request may timeout
+- Upgrade to Vercel Pro for 60-second timeouts if needed
+
+### Static file errors in function logs
+- The `VERCEL` environment variable is set automatically — it triggers Django to use `StaticFilesStorage` instead of WhiteNoise's manifest storage
+- This is expected; Django does not serve static files on Vercel (the CDN does)
 
 ---
 
 ## Custom Domain (Optional)
 
-### Vercel (Frontend)
 1. Vercel Dashboard > your project > **Settings** > **Domains**
 2. Add your domain, follow DNS instructions
+3. Both frontend and API are served from the same domain — no additional configuration needed
 
-### Render (Backend)
-1. Render Dashboard > your service > **Settings** > **Custom Domains**
-2. Add your API subdomain (e.g., `api.yourdomain.com`)
-3. Update `VITE_API_URL` on Vercel to match
+---
+
+## Alternative: Split Deployment (Vercel + Render)
+
+If you prefer to run the backend separately (e.g., for longer timeouts or persistent connections):
+
+1. Deploy backend on **Render** as a Web Service:
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+   - Start Command: `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`
+   - Env vars: `DJANGO_SECRET_KEY`, `DEBUG=False`, `ORS_API_KEY`, `CORS_ALLOWED_ORIGINS=https://your-app.vercel.app`
+
+2. Deploy frontend on **Vercel** separately:
+   - Root Directory: `frontend`
+   - Framework: Vite
+   - Env var: `VITE_API_URL=https://your-render-service.onrender.com`
+
+> **Note**: Render free tier spins down after 15 min of inactivity (30-60s cold start on first request).
 
 ---
 
 ## Environment Variables Summary
 
-### Backend (Render)
+### Unified Vercel Deployment
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DJANGO_SECRET_KEY` | Yes | Random secret key for Django |
 | `DEBUG` | Yes | Must be `False` in production |
 | `ORS_API_KEY` | Yes | OpenRouteService API key |
-| `CORS_ALLOWED_ORIGINS` | Yes | Frontend URL (comma-separated if multiple) |
-| `PYTHON_VERSION` | No | Python version (default: 3.11) |
-
-### Frontend (Vercel)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_API_URL` | Yes | Backend URL (e.g., `https://eld-trip-planner-api.onrender.com`) |
+| `VITE_API_URL` | No | Leave empty for same-origin (default) |
